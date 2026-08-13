@@ -4,11 +4,11 @@ import '../models/models.dart';
 
 /// Backend base URL for the owner dashboard (Flutter Web).
 /// Override at build/run time with:
-///   flutter run -d chrome --dart-define=GHAZI_API_BASE_URL=http://localhost:3000
+///   flutter run -d chrome --dart-define=GHAZI_API_BASE_URL=https://ghazi-backend.onrender.com
 class ApiConfig {
   static const String baseUrl = String.fromEnvironment(
     'GHAZI_API_BASE_URL',
-    defaultValue: 'http://localhost:3000',
+    defaultValue: 'https://ghazi-backend.onrender.com',
   );
 }
 

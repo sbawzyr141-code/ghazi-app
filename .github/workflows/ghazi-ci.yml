@@ -58,7 +58,7 @@ jobs:
 
       - name: Build dashboard web app
         working-directory: dashboard
-        run: flutter build web --release --base-href "/ghazi-app/"
+        run: flutter build web --release --base-href "/ghazi-app/" --dart-define=GHAZI_API_BASE_URL=https://ghazi-backend.onrender.com
 
   mobile-web-build:
     name: Mobile web build
@@ -84,4 +84,4 @@ jobs:
 
       - name: Build mobile web app
         working-directory: mobile
-        run: flutter build web --release --base-href "/ghazi-app/"
+        run: flutter build web --release --base-href "/ghazi-app/" --dart-define=GHAZI_API_BASE_URL=https://ghazi-backend.onrender.com

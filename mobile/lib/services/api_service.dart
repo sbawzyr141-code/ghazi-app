@@ -67,10 +67,14 @@ class ApiService {
     }
   }
 
-  // عنوان السيرفر (عدّل الـ IP بحسب جهازك أو سيرفر الباك إند)
-  // للأندرويد إيموليتور: http://10.0.2.2:3000/api
-  // للجهاز الحقيقي: http://192.168.x.x:3000/api
-  static const String baseUrl = 'http://10.0.2.2:3000/api';
+  // عنوان السيرفر الأساسي.
+  // استخدم --dart-define=GHAZI_API_BASE_URL=... عند بناء التطبيق.
+  // مثال محلي: http://10.0.2.2:3000/api
+  // مثال إنتاج: https://ghazi-backend.onrender.com/api
+  static const String baseUrl = String.fromEnvironment(
+    'GHAZI_API_BASE_URL',
+    defaultValue: 'https://ghazi-backend.onrender.com/api',
+  );
 
   static final Map<String, String> _headers = {
     'Content-Type': 'application/json; charset=UTF-8',

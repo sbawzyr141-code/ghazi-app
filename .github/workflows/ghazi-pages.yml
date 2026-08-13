@@ -34,7 +34,7 @@ jobs:
 
       - name: Build web app
         working-directory: dashboard
-        run: flutter build web --release --base-href "/ghazi-app/"
+        run: flutter build web --release --base-href "/ghazi-app/" --dart-define=GHAZI_API_BASE_URL=https://ghazi-backend.onrender.com
 
       - name: Upload Pages artifact
         uses: actions/upload-pages-artifact@v3
