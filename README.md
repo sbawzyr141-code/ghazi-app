@@ -84,6 +84,23 @@ cd dashboard && flutter pub get && flutter run -d chrome --dart-define=GHAZI_API
 
 ---
 
+## 5. GitHub Actions setup
+
+The repository is prepared to run validation and deployment workflows from GitHub Actions.
+
+### Available workflows
+- `.github/workflows/ghazi-ci.yml` — validates the backend, and compiles the Flutter dashboard and mobile web app.
+- `.github/workflows/ghazi-pages.yml` — builds the dashboard web app and deploys it to GitHub Pages.
+
+### How to use
+1. Push the project to GitHub.
+2. Open the repository page and go to the Actions tab.
+3. Click the workflow you want to run.
+4. Use the Run workflow button for manual execution.
+
+### GitHub Pages
+After enabling GitHub Pages in the repository settings, the deployment workflow will publish the dashboard at a public URL.
+
 ## Brand
 
 - Primary Deep Navy `#1A365D`
