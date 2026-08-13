@@ -1,0 +1,12 @@
+services:
+  - type: web
+    name: ghazi-backend
+    runtime: node
+    rootDir: backend
+    plan: free
+    buildCommand: npm install && npm run seed
+    startCommand: npm start
+    healthCheckPath: /api/health
+    envVars:
+      - key: NODE_ENV
+        value: production
