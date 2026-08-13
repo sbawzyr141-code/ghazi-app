@@ -1,0 +1,28 @@
+# Node
+node_modules/
+backend/node_modules/
+
+# Flutter / Dart
+**/.dart_tool/
+**/.packages
+**/.pub-cache/
+**/build/
+**/ios/Pods/
+**/.symlinks/
+**/coverage/
+**/*.g.dart
+**/*.freezed.dart
+**/*.generated.dart
+
+# IDE
+.vscode/
+.idea/
+*.iml
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Logs
+npm-debug.log*
+*.log

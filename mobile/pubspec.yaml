@@ -1,0 +1,33 @@
+name: ghazi_mobile
+description: "غازي — Ghazi driver app for gas station queue booking (Mukalla)"
+publish_to: "none"
+version: 1.0.0+1
+
+environment:
+  sdk: ">=3.0.0 <4.0.0"
+
+dependencies:
+  flutter:
+    sdk: flutter
+  flutter_localizations:
+    sdk: flutter
+  cupertino_icons: ^1.0.6
+  http: ^1.2.1
+  socket_io_client: ^2.0.3+1
+  qr_flutter: ^4.1.0
+  shared_preferences: ^2.2.3
+  intl: ^0.20.2
+  firebase_core: ^4.13.0
+  firebase_auth: ^6.5.7
+  cloud_firestore: ^6.8.0
+  google_sign_in: ^7.2.0
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^4.0.0
+
+flutter:
+  uses-material-design: true
+  assets:
+    - assets/images/logo.png

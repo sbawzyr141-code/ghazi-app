@@ -1,0 +1,39 @@
+{
+  "project_info": {
+    "project_number": "622485634549",
+    "project_id": "ghazi-app-bcf25",
+    "storage_bucket": "ghazi-app-bcf25.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:622485634549:android:69a5aea442e1e7ac4cf4bc",
+        "android_client_info": {
+          "package_name": "com.example.ghazi_mobile"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "622485634549-bajdc5j8vnr3jejcjppfu9r0llqvhpdp.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDLhzPImtAwRd5fL9lzFuBlUCcHLuKMtco"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "622485634549-bajdc5j8vnr3jejcjppfu9r0llqvhpdp.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
