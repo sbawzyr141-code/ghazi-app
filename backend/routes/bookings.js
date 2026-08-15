@@ -8,14 +8,18 @@ const router = express.Router();
 
 // POST /api/bookings — driver books a queue slot at a station
 router.post("/", requireAuth, (req, res) => {
-  const { station_id, fuel_type } = req.body;
+  const { station_id, fuel_type, gas_system, service_fee_agreed } = req.body;
   if (!station_id) return res.status(400).json({ error: "station_id is required" });
+  if (!service_fee_agreed) return res.status(400).json({ error: "You must agree to the service fee to proceed" });
 
   const station = db.prepare("SELECT * FROM stations WHERE id = ?").get(station_id);
   if (!station) return res.status(404).json({ error: "Station not found" });
   if (!station.is_available) {
     return res.status(400).json({ error: "This station currently has no fuel available" });
   }
+
+  // estimate wait: simple heuristic e.g., 5 minutes per car in queue
+  const estimatedWait = (station.queue_count || 0) * 5;
 
   const booking = {
     id: uuid(),
@@ -24,12 +28,15 @@ router.post("/", requireAuth, (req, res) => {
     queue_number: station.next_queue_number,
     status: "confirmed",
     fuel_type: fuel_type || null,
+    gas_system: gas_system || null,
+    service_fee_agreed: service_fee_agreed ? 1 : 0,
+    estimated_wait_minutes: estimatedWait,
   };
 
   const tx = db.transaction(() => {
     db.prepare(
-      `INSERT INTO bookings (id, user_id, station_id, queue_number, status, fuel_type)
-       VALUES (@id, @user_id, @station_id, @queue_number, @status, @fuel_type)`
+      `INSERT INTO bookings (id, user_id, station_id, queue_number, status, fuel_type, gas_system, service_fee_agreed, estimated_wait_minutes)
+       VALUES (@id, @user_id, @station_id, @queue_number, @status, @fuel_type, @gas_system, @service_fee_agreed, @estimated_wait_minutes)`
     ).run(booking);
 
     db.prepare(
@@ -62,6 +69,22 @@ router.get("/user/:userId", requireAuth, (req, res) => {
     )
     .all(req.params.userId);
   res.json({ bookings: rows });
+});
+
+// GET /api/bookings/user?phone= — query bookings by driver phone (used by mobile)
+router.get("/user", requireAuth, (req, res) => {
+  const phone = req.query.phone;
+  if (!phone) return res.status(400).json({ error: 'phone is required' });
+  const user = db.prepare('SELECT id FROM users WHERE phone = ?').get(phone);
+  if (!user) return res.json([]);
+  const rows = db
+    .prepare(
+      `SELECT b.*, s.name_ar as station_name_ar, s.name as station_name, s.address
+       FROM bookings b JOIN stations s ON s.id = b.station_id
+       WHERE b.user_id = ? ORDER BY b.created_at DESC`
+    )
+    .all(user.id);
+  res.json(rows);
 });
 
 // GET /api/bookings/station/:stationId — owner's live queue for their station

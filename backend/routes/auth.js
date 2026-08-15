@@ -23,6 +23,9 @@ function sanitize(user) {
 // POST /api/auth/register
 router.post("/register", (req, res) => {
   const { name, email, phone, password, role } = req.body;
+  // optional station fields for station_owner
+  const { station_name, station_license } = req.body;
+
   if (!name || !email || !password) {
     return res.status(400).json({ error: "name, email, and password are required" });
   }
@@ -30,15 +33,30 @@ router.post("/register", (req, res) => {
   const existing = db.prepare("SELECT id FROM users WHERE email = ?").get(email);
   if (existing) return res.status(409).json({ error: "Email already registered" });
 
+  const userId = uuid();
   const user = {
-    id: uuid(),
+    id: userId,
     name,
     email,
     phone: phone || null,
     password_hash: bcrypt.hashSync(password, 10),
-    role: role === "owner" ? "owner" : "driver",
+    role: role === "station_owner" ? "station_owner" : "driver",
     station_id: null,
   };
+
+  // If registering a station owner, create the station record and link it
+  if (user.role === 'station_owner') {
+    if (!station_name || !station_license) {
+      return res.status(400).json({ error: 'station_name and station_license are required for station_owner' });
+    }
+    const stationId = uuid();
+    db.prepare(
+      `INSERT INTO stations (id, name, name_ar, address, station_license, updated_at)
+       VALUES (?, ?, ?, ?, ?, datetime('now'))`
+    ).run(stationId, station_name, station_name, null, station_license);
+
+    user.station_id = stationId;
+  }
 
   db.prepare(
     `INSERT INTO users (id, name, email, phone, password_hash, role, station_id)

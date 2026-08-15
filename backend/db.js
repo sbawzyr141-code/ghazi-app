@@ -30,6 +30,7 @@ CREATE TABLE IF NOT EXISTS stations (
   lng REAL,
   fuel_types TEXT,           -- comma separated: petrol91,petrol95,diesel
   is_available INTEGER NOT NULL DEFAULT 1, -- 1 = has fuel, 0 = out
+  station_license TEXT,      -- registration / license number for owner
   queue_count INTEGER NOT NULL DEFAULT 0,
   next_queue_number INTEGER NOT NULL DEFAULT 1,
   image_url TEXT,
@@ -43,6 +44,9 @@ CREATE TABLE IF NOT EXISTS bookings (
   queue_number INTEGER NOT NULL,
   status TEXT NOT NULL DEFAULT 'pending', -- pending | confirmed | completed | cancelled
   fuel_type TEXT,
+  gas_system TEXT,            -- original | converted (vehicle gas system)
+  service_fee_agreed INTEGER NOT NULL DEFAULT 0, -- 0 = no, 1 = yes
+  estimated_wait_minutes INTEGER,
   created_at TEXT DEFAULT (datetime('now')),
   completed_at TEXT
 );

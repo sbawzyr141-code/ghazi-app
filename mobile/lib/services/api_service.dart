@@ -108,6 +108,8 @@ class ApiService {
     required String carPlate,
     required String carModel,
     required String quantity,
+    String? gasSystem,
+    bool serviceFeeAgreed = false,
   }) async {
     try {
       final response = await http
@@ -121,13 +123,16 @@ class ApiService {
               'plate_number': carPlate,
               'car_model': carModel,
               'quantity': quantity,
+              'gas_system': gasSystem,
+              'service_fee_agreed': serviceFeeAgreed,
             }),
           )
           .timeout(const Duration(seconds: 10));
 
       if (response.statusCode == 200 || response.statusCode == 201) {
         final Map<String, dynamic> data = jsonDecode(response.body);
-        final newBooking = Booking.fromJson(data, defaultPhone: phone);
+        final Map<String, dynamic> bookingJson = data['booking'] ?? data;
+        final newBooking = Booking.fromJson(bookingJson, defaultPhone: phone);
         _addCachedBooking(phone, newBooking);
         _addGlobalCachedBooking(newBooking);
         return newBooking;
@@ -187,7 +192,7 @@ class ApiService {
   static Future<bool> cancelBooking(String bookingId) async {
     try {
       final response = await http
-          .put(
+          .patch(
             Uri.parse('$baseUrl/bookings/$bookingId/cancel'),
             headers: _headers,
           )

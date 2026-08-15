@@ -28,6 +28,8 @@ class _BookingScreenState extends State<BookingScreen> {
   final _carModelController = TextEditingController();
   final _quantityController = TextEditingController(text: '20 لتر');
   bool _isLoading = false;
+  String? _gasSystem; // 'original' | 'converted'
+  bool _serviceFeeAgreed = false;
 
   final List<String> _quickQuantities = [
     '15 لتر',
@@ -49,6 +51,19 @@ class _BookingScreenState extends State<BookingScreen> {
 
   Future<void> _submitBooking() async {
     if (!_formKey.currentState!.validate()) return;
+    if (_gasSystem == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('يرجى اختيار نوع منظومة الغاز')),
+      );
+      return;
+    }
+    if (!_serviceFeeAgreed) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+            content: Text('يجب الموافقة على رسوم الخدمة (1,000 ريال)')),
+      );
+      return;
+    }
 
     setState(() => _isLoading = true);
 
@@ -60,6 +75,8 @@ class _BookingScreenState extends State<BookingScreen> {
         carPlate: _carPlateController.text.trim(),
         carModel: _carModelController.text.trim(),
         quantity: _quantityController.text.trim(),
+        gasSystem: _gasSystem,
+        serviceFeeAgreed: _serviceFeeAgreed,
       );
 
       if (!mounted) return;
@@ -313,6 +330,58 @@ class _BookingScreenState extends State<BookingScreen> {
                 ],
               ),
               const SizedBox(height: 18),
+
+              const Text(
+                'نوع منظومة الغاز',
+                style: TextStyle(
+                  fontSize: 14,
+                  fontWeight: FontWeight.bold,
+                  color: GhaziTheme.navy,
+                ),
+              ),
+              const SizedBox(height: 8),
+              Row(
+                children: [
+                  Expanded(
+                    child: RadioListTile<String>(
+                      title: const Text('غاز وكالة'),
+                      value: 'original',
+                      groupValue: _gasSystem,
+                      onChanged: (v) => setState(() => _gasSystem = v),
+                    ),
+                  ),
+                  Expanded(
+                    child: RadioListTile<String>(
+                      title: const Text('غاز محول'),
+                      value: 'converted',
+                      groupValue: _gasSystem,
+                      onChanged: (v) => setState(() => _gasSystem = v),
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 8),
+
+              CheckboxListTile(
+                value: _serviceFeeAgreed,
+                onChanged: (v) =>
+                    setState(() => _serviceFeeAgreed = v ?? false),
+                title: const Text(
+                    'موافق على رسوم خدمة الحجز عبر التطبيق (1,000 ريال)'),
+                controlAffinity: ListTileControlAffinity.leading,
+              ),
+              if (_serviceFeeAgreed)
+                Container(
+                  margin: const EdgeInsets.only(bottom: 12),
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    color: Colors.yellow.shade50,
+                    borderRadius: BorderRadius.circular(8),
+                    border: Border.all(color: Colors.yellow.shade700),
+                  ),
+                  child: const Text(
+                      '📌 تنبيه: يتم تسليم رسوم الخدمة (1,000 ريال) مباشرة لصاحب المحطة عند الوصول واستلام الغاز.'),
+                ),
 
               // تحديد الكمية
               const Text(
