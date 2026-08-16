@@ -46,10 +46,10 @@ class _LoginScreenState extends State<LoginScreen> {
 
     setState(() => _isLoading = true);
     try {
-    await ApiService.instance.login(email, password);
-    // store phone/email locally for role detection (app currently uses placeholder)
-    ApiService.currentUserEmail = email;
-    ApiService.currentUserPhone = email.contains('@') ? null : email;
+      await ApiService.instance.login(email, password);
+      // store phone/email locally for role detection (app currently uses placeholder)
+      ApiService.currentUserEmail = email;
+      ApiService.currentUserPhone = email.contains('@') ? null : email;
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(

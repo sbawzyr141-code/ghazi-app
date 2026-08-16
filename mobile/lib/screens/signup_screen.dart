@@ -62,8 +62,9 @@ class _SignupScreenState extends State<SignupScreen> {
 
     setState(() => _isLoading = true);
     try {
-      final cred = await ApiService.instance.signup(name, phone, email, password);
-      // register backend user record
+      final cred =
+          await ApiService.instance.signup(name, phone, email, password);
+      await ApiService.instance.signup(name, phone, email, password);
       final backendOk = await ApiService.registerBackendUser(
         name: name,
         email: email,

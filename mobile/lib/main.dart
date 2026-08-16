@@ -142,7 +142,8 @@ class _MainNavigationWrapperState extends State<MainNavigationWrapper> {
     }
 
     // إظهار الشريط السفلي فقط في الشاشات الرئيسية الأربع الأولى
-    final showBottomBar = _currentIndex <= 3 && _currentUserRole != 'station_owner';
+    final showBottomBar =
+        _currentIndex <= 3 && _currentUserRole != 'station_owner';
 
     return Scaffold(
       body: activeBody,
