@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:mobile_scanner/mobile_scanner.dart';
+import 'package:flutter/foundation.dart';
 import '../models/ghazi_models.dart';
 import '../theme.dart';
 import '../services/api_service.dart';
@@ -195,15 +196,17 @@ class _WorkerDashboardScreenState extends State<WorkerDashboardScreen> {
               if (_scannerVisible)
                 SizedBox(
                   height: 360,
-                  child: MobileScanner(
-                    onDetect: (capture) {
-                      final barcodes = capture.barcodes;
-                      if (barcodes.isEmpty) return;
-                      final code = barcodes.first.rawValue ?? '';
-                      if (code.isEmpty) return;
-                      _onQrScanned(code);
-                    },
-                  ),
+                  child: kIsWeb
+                      ? _WebQrFallback(onSubmit: (code) => _onQrScanned(code))
+                      : MobileScanner(
+                          onDetect: (capture) {
+                            final barcodes = capture.barcodes;
+                            if (barcodes.isEmpty) return;
+                            final code = barcodes.first.rawValue ?? '';
+                            if (code.isEmpty) return;
+                            _onQrScanned(code);
+                          },
+                        ),
                 ),
             ]),
           ),
@@ -303,6 +306,47 @@ class _WorkerDashboardScreenState extends State<WorkerDashboardScreen> {
               },
             ),
         ]),
+      ),
+    );
+  }
+}
+
+// Simple web fallback widget for entering QR code manually
+class _WebQrFallback extends StatefulWidget {
+  final void Function(String code) onSubmit;
+  const _WebQrFallback({Key? key, required this.onSubmit}) : super(key: key);
+
+  @override
+  State<_WebQrFallback> createState() => _WebQrFallbackState();
+}
+
+class _WebQrFallbackState extends State<_WebQrFallback> {
+  final _controller = TextEditingController();
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.all(12),
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          const Text('Web: أدخل رمز التذكرة يدوياً للاختبار'),
+          const SizedBox(height: 8),
+          TextField(
+              controller: _controller,
+              decoration: const InputDecoration(
+                  border: OutlineInputBorder(), hintText: 'معرف الحجز')),
+          const SizedBox(height: 8),
+          ElevatedButton(
+              onPressed: () => widget.onSubmit(_controller.text.trim()),
+              child: const Text('تأكيد'))
+        ],
       ),
     );
   }
