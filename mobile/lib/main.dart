@@ -54,6 +54,7 @@ class _MainNavigationWrapperState extends State<MainNavigationWrapper> {
   GasStation? _selectedStation;
   Booking? _selectedBooking;
   String _currentUserPhone = '770000000';
+  String? _currentUserRole; // 'driver' | 'station_owner'
 
   @override
   Widget build(BuildContext context) {
@@ -94,7 +95,19 @@ class _MainNavigationWrapperState extends State<MainNavigationWrapper> {
           onNavigateToSignup: () {
             setState(() => _currentIndex = 6); // الانتقال إلى شاشة إنشاء الحساب
           },
-          onLoginSuccess: () => setState(() => _currentIndex = 0),
+          onLoginSuccess: () async {
+            // detect role and navigate accordingly
+            final user = await ApiService.getUser(phone: _currentUserPhone);
+            final role = user?['role'] ?? 'driver';
+            setState(() {
+              _currentUserRole = role;
+              if (role == 'station_owner') {
+                _currentIndex = 2; // open dashboard for owners
+              } else {
+                _currentIndex = 0; // normal driver home
+              }
+            });
+          },
         );
         break;
       case 4:
@@ -129,7 +142,7 @@ class _MainNavigationWrapperState extends State<MainNavigationWrapper> {
     }
 
     // إظهار الشريط السفلي فقط في الشاشات الرئيسية الأربع الأولى
-    final showBottomBar = _currentIndex <= 3;
+    final showBottomBar = _currentIndex <= 3 && _currentUserRole != 'station_owner';
 
     return Scaffold(
       body: activeBody,

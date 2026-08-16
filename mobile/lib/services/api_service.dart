@@ -17,6 +17,11 @@ class ApiService {
   // Public list of stations accessible via ApiService.instance.stations
   List<GasStation> stations = [];
 
+  // Current logged in user info (populated after login/signup)
+  static String? currentUserEmail;
+  static String? currentUserPhone;
+  static String? currentUserRole; // 'driver' | 'station_owner'
+
   // Cache user bookings locally when createBooking succeeds
   static final Map<String, List<Booking>> _cachedUserBookings = {};
   static final List<Booking> _globalCachedBookings = [];
@@ -75,6 +80,80 @@ class ApiService {
     'GHAZI_API_BASE_URL',
     defaultValue: 'https://ghazi-backend.onrender.com/api',
   );
+
+  // Helper to build socket URL (strip trailing /api)
+  static String get socketUrl {
+    if (baseUrl.endsWith('/api'))
+      return baseUrl.substring(0, baseUrl.length - 4);
+    return baseUrl;
+  }
+
+  // Fetch user by email or phone (used for role detection)
+  static Future<Map<String, dynamic>?> getUser(
+      {String? email, String? phone}) async {
+    try {
+      final uri = Uri.parse('$baseUrl/auth/user').replace(queryParameters: {
+        if (email != null) 'email': email,
+        if (phone != null) 'phone': phone,
+      });
+      final response = await http
+          .get(uri, headers: _headers)
+          .timeout(const Duration(seconds: 6));
+      if (response.statusCode == 200) {
+        final data = jsonDecode(response.body);
+        return data['user'] as Map<String, dynamic>?;
+      }
+      return null;
+    } catch (e) {
+      return null;
+    }
+  }
+
+  // Create user record on backend after Firebase signup
+  static Future<bool> registerBackendUser({
+    required String name,
+    required String email,
+    required String phone,
+    required String password,
+    required String role,
+    String? stationName,
+    String? stationLicense,
+  }) async {
+    try {
+      final response = await http
+          .post(
+            Uri.parse('$baseUrl/auth/register'),
+            headers: _headers,
+            body: jsonEncode({
+              'name': name,
+              'email': email,
+              'phone': phone,
+              'password': password,
+              'role': role,
+              if (stationName != null) 'station_name': stationName,
+              if (stationLicense != null) 'station_license': stationLicense,
+            }),
+          )
+          .timeout(const Duration(seconds: 8));
+
+      return response.statusCode == 201 || response.statusCode == 200;
+    } catch (e) {
+      return false;
+    }
+  }
+
+  // Mark booking as completed (owner action)
+  static Future<bool> completeBooking(String bookingId) async {
+    try {
+      final response = await http
+          .patch(Uri.parse('$baseUrl/bookings/$bookingId/complete'),
+              headers: _headers)
+          .timeout(const Duration(seconds: 6));
+      return response.statusCode == 200;
+    } catch (e) {
+      return false;
+    }
+  }
 
   static final Map<String, String> _headers = {
     'Content-Type': 'application/json; charset=UTF-8',

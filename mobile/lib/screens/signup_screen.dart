@@ -62,7 +62,18 @@ class _SignupScreenState extends State<SignupScreen> {
 
     setState(() => _isLoading = true);
     try {
-      await ApiService.instance.signup(name, phone, email, password);
+      final cred = await ApiService.instance.signup(name, phone, email, password);
+      // register backend user record
+      final backendOk = await ApiService.registerBackendUser(
+        name: name,
+        email: email,
+        phone: phone,
+        password: password,
+        role: 'driver',
+      );
+      ApiService.currentUserEmail = email;
+      ApiService.currentUserPhone = phone;
+      ApiService.currentUserRole = 'driver';
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(

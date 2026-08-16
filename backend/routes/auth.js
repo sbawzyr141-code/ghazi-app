@@ -92,3 +92,17 @@ router.get("/me", requireAuth, (req, res) => {
 });
 
 module.exports = router;
+
+// Public helper: GET /api/auth/user?email=... or ?phone=...
+router.get('/user', (req, res) => {
+  const { email, phone } = req.query;
+  if (!email && !phone) return res.status(400).json({ error: 'email or phone is required' });
+  let user;
+  if (email) {
+    user = db.prepare('SELECT id, name, email, phone, role, station_id, created_at FROM users WHERE email = ?').get(email);
+  } else {
+    user = db.prepare('SELECT id, name, email, phone, role, station_id, created_at FROM users WHERE phone = ?').get(phone);
+  }
+  if (!user) return res.status(404).json({ error: 'User not found' });
+  res.json({ user });
+});

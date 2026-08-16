@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import '../models/ghazi_models.dart';
 import '../theme.dart';
 import '../services/api_service.dart';
+import 'package:mobile_scanner/mobile_scanner.dart';
 
 class WorkerDashboardScreen extends StatefulWidget {
   final GasStation station;
@@ -20,6 +21,8 @@ class _WorkerDashboardScreenState extends State<WorkerDashboardScreen> {
   late int _queueCount;
   int _currentServingNumber = 14; // رقم الدور الذي تتم خدمته حالياً
   bool _isProcessing = false;
+  // QR scanner active flag
+  bool _scannerVisible = false;
 
   // قائمة نموذجية للسيارات المنتظرة في الطابور
   List<Map<String, dynamic>> _waitingQueue = [
@@ -214,81 +217,70 @@ class _WorkerDashboardScreenState extends State<WorkerDashboardScreen> {
               ),
               child: Column(
                 children: [
-                  const Text(
-                    'رقم الدور الحالي عند المضخة',
-                    style: TextStyle(
-                      color: Colors.white70,
-                      fontSize: 14,
-                    ),
-                  ),
-                  const SizedBox(height: 8),
-                  Text(
-                    '#$_currentServingNumber',
-                    style: const TextStyle(
-                      fontSize: 54,
-                      fontWeight: FontWeight.w900,
-                      color: GhaziTheme.orange,
-                      letterSpacing: 2,
-                    ),
-                  ),
-                  const SizedBox(height: 16),
+                  // Replace current serving box with QR scanner toggle
                   Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                     children: [
-                      _buildMetricItem(
-                        title: 'السيارات بالانتظار',
-                        value: '$_queueCount',
-                        icon: Icons.directions_car,
+                      Expanded(
+                        child: ElevatedButton.icon(
+                          style: ElevatedButton.styleFrom(
+                            minimumSize: const Size.fromHeight(52),
+                            backgroundColor: Colors.white,
+                            foregroundColor: GhaziTheme.navy,
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(14),
+                            ),
+                          ),
+                          icon: const Icon(Icons.qr_code_scanner, color: GhaziTheme.navy),
+                          label: const Text('فتح ماسح الـ QR'),
+                          onPressed: () => setState(() => _scannerVisible = !_scannerVisible),
+                        ),
                       ),
-                      Container(
-                        height: 35,
-                        width: 1,
-                        color: Colors.white24,
-                      ),
-                      _buildMetricItem(
-                        title: 'الوقت التقديري',
-                        value: '${_queueCount * 3} دقيقة',
-                        icon: Icons.timer_outlined,
+                      const SizedBox(width: 12),
+                      ElevatedButton(
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: GhaziTheme.orange,
+                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                          minimumSize: const Size(120, 52),
+                        ),
+                        onPressed: _isProcessing ? null : _serveNextCar,
+                        child: _isProcessing
+                            ? const SizedBox(
+                                height: 22,
+                                width: 22,
+                                child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2.5),
+                              )
+                            : const Text('نداء التالية', style: TextStyle(fontWeight: FontWeight.bold)),
                       ),
                     ],
                   ),
-                  const SizedBox(height: 20),
-
-                  // زر نداء وتمرير الدور التالي
-                  ElevatedButton.icon(
-                    style: ElevatedButton.styleFrom(
-                      minimumSize: const Size.fromHeight(52),
-                      backgroundColor: GhaziTheme.orange,
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(14),
+                  const SizedBox(height: 12),
+                  if (_scannerVisible)
+                    SizedBox(
+                      height: 360,
+                      child: MobileScanner(
+                        allowDuplicates: false,
+                        onDetect: (capture) async {
+                          final List<Barcode> barcodes = capture.barcodes;
+                          if (barcodes.isEmpty) return;
+                          final code = barcodes.first.rawValue ?? '';
+                          if (code.isEmpty) return;
+                          // treat code as booking id
+                          setState(() => _scannerVisible = false);
+                          final success = await ApiService.completeBooking(code);
+                          if (success) {
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              const SnackBar(content: Text('تم إنهاء التذكرة وتحديث الطابور'), backgroundColor: GhaziTheme.green),
+                            );
+                            // Update local queue
+                            if (_queueCount > 0) setState(() => _queueCount--);
+                          } else {
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              const SnackBar(content: Text('فشل إنهاء التذكرة'), backgroundColor: GhaziTheme.red),
+                            );
+                          }
+                        },
                       ),
                     ),
-                    icon: _isProcessing
-                        ? const SizedBox.shrink()
-                        : const Icon(
-                            Icons.check_circle_outline,
-                            color: Colors.white,
-                            size: 24,
-                          ),
-                    label: _isProcessing
-                        ? const SizedBox(
-                            height: 22,
-                            width: 22,
-                            child: CircularProgressIndicator(
-                              color: Colors.white,
-                              strokeWidth: 2.5,
-                            ),
-                          )
-                        : const Text(
-                            'نداء السيارة التالية (تمرير الدور)',
-                            style: TextStyle(
-                              fontSize: 16,
-                              fontWeight: FontWeight.bold,
-                              color: Colors.white,
-                            ),
-                          ),
-                    onPressed: _isProcessing ? null : _serveNextCar,
-                  ),
                 ],
               ),
             ),
