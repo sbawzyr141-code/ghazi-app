@@ -19,6 +19,7 @@ void main() async {
   await Firebase.initializeApp(
     options: DefaultFirebaseOptions.currentPlatform,
   );
+  // initialize notifications and other services before starting the app
   await _initApp();
   runApp(const GhaziFlutterApp());
 }

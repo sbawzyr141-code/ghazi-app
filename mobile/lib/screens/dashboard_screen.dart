@@ -32,60 +32,27 @@ class _WorkerDashboardScreenState extends State<WorkerDashboardScreen> {
     super.initState();
     _isOpen = widget.station.isOpen;
     _queueCount = widget.station.currentQueueCount;
-    // connect to socket and subscribe to station room
-    SocketService.instance.connect(ApiService.socketUrl);
-    SocketService.instance.joinStation(widget.station.id);
-
-    SocketService.instance.onStationUpdate.listen((station) {
-      if (!mounted) return;
-      try {
-        final q =
-            station['queue_count'] ?? station['queueCount'] ?? _queueCount;
-        setState(() => _queueCount = q is int ? q : int.parse(q.toString()));
-      } catch (_) {}
-    });
-
-    int lastAlertThreshold = _queueCount;
-    SocketService.instance.onQueueUpdate.listen((payload) {
-      if (!mounted) return;
-      final type = payload['type'] as String? ?? '';
-      if (type == 'new_booking') {
-        final booking = payload['booking'] as Map<String, dynamic>? ?? {};
-        final ticket = booking['queue_number'] ?? booking['queueNumber'];
-        setState(() {
-          _waitingQueue.add({
-            'ticketNumber': ticket ?? 0,
-            'driverName':
-                booking['driver_name'] ?? booking['driverName'] ?? 'سائق',
-            'carModel': booking['car_model'] ?? booking['carModel'] ?? '',
-            'carPlate': booking['plate_number'] ?? booking['plateNumber'] ?? '',
-            'quantity': booking['quantity'] ?? '',
-            'time': 'الآن'
-          });
-          _queueCount++;
-        });
-      } else if (type == 'booking_completed' || type == 'booking_cancelled') {
-        final booking = payload['booking'] as Map<String, dynamic>?;
-        final bookingId = payload['booking_id'] ?? booking?['id'];
-        setState(() {
-          _waitingQueue.removeWhere((b) =>
-              b['ticketNumber'] ==
-              (booking?['queue_number'] ?? booking?['queueNumber']));
-          if (_queueCount > 0) _queueCount--;
-        });
-      }
-
-      // alert owner when queue is short (<=3)
-      if (_queueCount <= 3 && lastAlertThreshold > 3) {
-        NotificationService.showNotification(
-          id: DateTime.now().millisecondsSinceEpoch.remainder(100000),
-          title: 'تبقي ${_queueCount} سيارات',
-          body: 'تبقي ${_queueCount} سيارات في الطابور. تحضّر لاستقبالها.',
-        );
-        FlutterRingtonePlayer.playNotification();
-      }
-      lastAlertThreshold = _queueCount;
-    });
+    // connect to socket for live updates
+    try {
+      SocketService.instance.connect(ApiService.socketUrl);
+      SocketService.instance.joinStation(widget.station.id);
+      SocketService.instance.onQueueUpdate.listen((payload) {
+        if (!mounted) return;
+        final newCount = payload['queue_count'] as int? ?? _queueCount;
+        setState(() => _queueCount = newCount);
+        // notify operator when 3 cars left
+        if (newCount <= 3) {
+          NotificationService.showNotification(
+              id: 1001,
+              title: 'تنبيه الطابور',
+              body: 'تبقى $newCount سيارات فقط في الطابور');
+        }
+      });
+      SocketService.instance.onStationUpdate.listen((payload) {
+        if (!mounted) return;
+        // handle any station metadata updates
+      });
+    } catch (_) {}
   }
 
   Future<void> _serveNextCar() async {
@@ -140,6 +107,10 @@ class _WorkerDashboardScreenState extends State<WorkerDashboardScreen> {
         title: 'تذكرة مكتملة',
         body: 'تم إنهاء التذكرة وتحديث الطابور بنجاح',
       );
+      // play a short sound to confirm
+      try {
+        FlutterRingtonePlayer.playNotification();
+      } catch (_) {}
     } else {
       ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
         content: Text('فشل إنهاء التذكرة'),
@@ -371,15 +342,6 @@ class _WorkerDashboardScreenState extends State<WorkerDashboardScreen> {
         ]),
       ),
     );
-  }
-
-  @override
-  void dispose() {
-    try {
-      SocketService.instance.leaveStation(widget.station.id);
-      SocketService.instance.disconnect();
-    } catch (_) {}
-    super.dispose();
   }
 }
 

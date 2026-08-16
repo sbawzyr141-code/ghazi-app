@@ -2,47 +2,57 @@ import 'dart:async';
 import 'package:socket_io_client/socket_io_client.dart' as IO;
 
 class SocketService {
-  static final SocketService instance = SocketService._internal();
-
-  SocketService._internal();
+  SocketService._();
+  static final SocketService instance = SocketService._();
 
   IO.Socket? _socket;
-  final _queueUpdateController =
-      StreamController<Map<String, dynamic>>.broadcast();
-  final _stationUpdateController =
-      StreamController<Map<String, dynamic>>.broadcast();
 
-  Stream<Map<String, dynamic>> get onQueueUpdate =>
-      _queueUpdateController.stream;
-  Stream<Map<String, dynamic>> get onStationUpdate =>
-      _stationUpdateController.stream;
+  final StreamController<Map<String, dynamic>> _queueController =
+      StreamController.broadcast();
+  final StreamController<Map<String, dynamic>> _stationController =
+      StreamController.broadcast();
+
+  Stream<Map<String, dynamic>> get onQueueUpdate => _queueController.stream;
+  Stream<Map<String, dynamic>> get onStationUpdate => _stationController.stream;
 
   void connect(String url) {
-    try {
-      if (_socket != null) return;
-      _socket = IO.io(url, <String, dynamic>{
-        'transports': ['websocket'],
-        'autoConnect': false,
-      });
+    if (_socket != null && _socket!.connected) return;
+    _socket = IO.io(url, <String, dynamic>{
+      'transports': ['websocket'],
+      'autoConnect': true,
+    });
 
-      _socket!.on('connect', (_) {
-        // connected
-      });
+    _socket!.on('connect', (_) {
+      // connected
+    });
 
-      _socket!.on('disconnect', (_) {
-        // disconnected
-      });
+    _socket!.on('disconnect', (_) {
+      // disconnected
+    });
 
-      _socket!.on('queue_update', (data) {
-        if (data is Map<String, dynamic>) _queueUpdateController.add(data);
-      });
+    _socket!.on('queue_update', (data) {
+      try {
+        final Map<String, dynamic> payload = Map<String, dynamic>.from(data);
+        _queueController.add(payload);
+      } catch (_) {}
+    });
 
-      _socket!.on('station_update', (data) {
-        if (data is Map<String, dynamic>) _stationUpdateController.add(data);
-      });
+    _socket!.on('station_update', (data) {
+      try {
+        final Map<String, dynamic> payload = Map<String, dynamic>.from(data);
+        _stationController.add(payload);
+      } catch (_) {}
+    });
+  }
 
-      _socket!.connect();
-    } catch (_) {}
+  void joinStation(String stationId) {
+    if (_socket == null) return;
+    _socket!.emit('join_station', {'station_id': stationId});
+  }
+
+  void leaveStation(String stationId) {
+    if (_socket == null) return;
+    _socket!.emit('leave_station', {'station_id': stationId});
   }
 
   void disconnect() {
@@ -50,21 +60,7 @@ class SocketService {
       _socket?.disconnect();
       _socket = null;
     } catch (_) {}
-  }
-
-  void joinStation(String stationId) {
-    if (_socket == null) return;
-    _socket!.emit('join_station', stationId);
-  }
-
-  void leaveStation(String stationId) {
-    if (_socket == null) return;
-    _socket!.emit('leave_station', stationId);
-  }
-
-  void dispose() {
-    _queueUpdateController.close();
-    _stationUpdateController.close();
-    disconnect();
+    _queueController.close();
+    _stationController.close();
   }
 }
