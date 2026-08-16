@@ -12,6 +12,7 @@ import 'screens/my_bookings_screen.dart';
 import 'screens/signup_screen.dart';
 import 'screens/ticket_screen.dart';
 import 'theme.dart';
+import 'services/notification_service.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -40,6 +41,11 @@ class GhaziFlutterApp extends StatelessWidget {
       home: const MainNavigationWrapper(),
     );
   }
+}
+
+// Initialize notifications on app start
+Future<void> _initApp() async {
+  await NotificationService.init();
 }
 
 class MainNavigationWrapper extends StatefulWidget {

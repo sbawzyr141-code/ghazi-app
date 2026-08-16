@@ -4,6 +4,7 @@ import 'package:flutter/foundation.dart';
 import '../models/ghazi_models.dart';
 import '../theme.dart';
 import '../services/api_service.dart';
+import '../services/notification_service.dart';
 
 class WorkerDashboardScreen extends StatefulWidget {
   final GasStation station;
@@ -77,6 +78,12 @@ class _WorkerDashboardScreenState extends State<WorkerDashboardScreen> {
         content: Text('تم إنهاء التذكرة وتحديث الطابور'),
         backgroundColor: GhaziTheme.green,
       ));
+      // play local notification to confirm scan
+      await NotificationService.showNotification(
+        id: DateTime.now().millisecondsSinceEpoch.remainder(100000),
+        title: 'تذكرة مكتملة',
+        body: 'تم إنهاء التذكرة وتحديث الطابور بنجاح',
+      );
     } else {
       ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
         content: Text('فشل إنهاء التذكرة'),

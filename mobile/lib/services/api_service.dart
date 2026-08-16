@@ -179,6 +179,13 @@ class ApiService {
     }
   }
 
+  // Helper to decide if a user is station owner or driver based on backend record
+  static Future<String> detectRoleByPhone(String phone) async {
+    final u = await getUser(phone: phone);
+    if (u == null) return 'driver';
+    return u['role'] ?? 'driver';
+  }
+
   /// 2. إرسال طلب حجز دور غاز جديد
   static Future<Booking> createBooking({
     required String stationId,
