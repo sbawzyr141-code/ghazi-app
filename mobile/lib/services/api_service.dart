@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'dart:io';
 import 'package:http/http.dart' as http;
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import '../models/ghazi_models.dart';
 
 class ApiService {
@@ -21,6 +22,26 @@ class ApiService {
   static String? currentUserEmail;
   static String? currentUserPhone;
   static String? currentUserRole; // 'driver' | 'station_owner'
+
+  // Persist user phone and role locally
+  static Future<void> persistCurrentUser(
+      {required String phone, String? role}) async {
+    try {
+      final p = await SharedPreferences.getInstance();
+      await p.setString('ghazi_user_phone', phone);
+      if (role != null) await p.setString('ghazi_user_role', role);
+      currentUserPhone = phone;
+      currentUserRole = role;
+    } catch (_) {}
+  }
+
+  static Future<void> loadPersistedUser() async {
+    try {
+      final p = await SharedPreferences.getInstance();
+      currentUserPhone = p.getString('ghazi_user_phone') ?? currentUserPhone;
+      currentUserRole = p.getString('ghazi_user_role') ?? currentUserRole;
+    } catch (_) {}
+  }
 
   // Cache user bookings locally when createBooking succeeds
   static final Map<String, List<Booking>> _cachedUserBookings = {};

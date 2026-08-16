@@ -21,6 +21,8 @@ void main() async {
   );
   // initialize notifications and other services before starting the app
   await _initApp();
+  // load persisted user info and connect socket if owner
+  await ApiService.loadPersistedUser();
   runApp(const GhaziFlutterApp());
 }
 

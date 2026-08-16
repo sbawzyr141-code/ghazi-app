@@ -6,6 +6,7 @@ class SocketService {
   static final SocketService instance = SocketService._();
 
   IO.Socket? _socket;
+  final Set<String> _joinedStations = {};
 
   final StreamController<Map<String, dynamic>> _queueController =
       StreamController.broadcast();
@@ -23,7 +24,12 @@ class SocketService {
     });
 
     _socket!.on('connect', (_) {
-      // connected
+      // re-join previously joined stations after reconnect
+      for (final s in _joinedStations) {
+        try {
+          _socket!.emit('join_station', {'station_id': s});
+        } catch (_) {}
+      }
     });
 
     _socket!.on('disconnect', (_) {
@@ -47,12 +53,18 @@ class SocketService {
 
   void joinStation(String stationId) {
     if (_socket == null) return;
-    _socket!.emit('join_station', {'station_id': stationId});
+    try {
+      _joinedStations.add(stationId);
+      _socket!.emit('join_station', {'station_id': stationId});
+    } catch (_) {}
   }
 
   void leaveStation(String stationId) {
     if (_socket == null) return;
-    _socket!.emit('leave_station', {'station_id': stationId});
+    try {
+      _joinedStations.remove(stationId);
+      _socket!.emit('leave_station', {'station_id': stationId});
+    } catch (_) {}
   }
 
   void disconnect() {
