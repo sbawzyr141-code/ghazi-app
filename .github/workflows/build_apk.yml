@@ -34,8 +34,9 @@ jobs:
         run: |
           flutter build apk --release --no-shrink
 
-      - name: Upload APK artifact
+      - name: Upload APK artifact(s)
         uses: actions/upload-artifact@v4
         with:
-          name: ghazi-release-apk
-          path: mobile/build/app/outputs/flutter-apk/app-release.apk
+          name: ghazi-apk
+          path: |
+            mobile/build/app/outputs/flutter-apk/*.apk
