@@ -99,8 +99,8 @@ class ApiService {
   // مثال إنتاج: https://ghazi-backend.onrender.com/api
   static const String baseUrl = String.fromEnvironment(
     'GHAZI_API_BASE_URL',
-    // Default to Android emulator host mapping to localhost for development
-    defaultValue: 'http://10.0.2.2:3000/api',
+    // Default to your local machine IP for testing on a real device
+    defaultValue: 'http://192.168.8.183:3000/api',
   );
 
   // Helper to build socket URL (strip trailing /api)

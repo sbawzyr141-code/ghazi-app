@@ -17,8 +17,9 @@ class SocketService {
   Stream<Map<String, dynamic>> get onStationUpdate => _stationController.stream;
 
   void connect(String url) {
+    final connectUrl = (url.isEmpty) ? 'http://192.168.8.183:3000' : url;
     if (_socket != null && _socket!.connected) return;
-    _socket = IO.io(url, <String, dynamic>{
+    _socket = IO.io(connectUrl, <String, dynamic>{
       'transports': ['websocket'],
       'autoConnect': true,
     });
