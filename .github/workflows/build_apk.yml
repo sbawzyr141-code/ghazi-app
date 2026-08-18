@@ -27,13 +27,15 @@ jobs:
         working-directory: ./mobile
         run: flutter pub get
 
-      - name: Build debug APK
+      - name: Build release APK
         working-directory: ./mobile
-        run: flutter build apk --debug
+        env:
+          ANDROID_HOME: /usr/local/lib/android/sdk
+        run: |
+          flutter build apk --release --no-shrink
 
       - name: Upload APK artifact
         uses: actions/upload-artifact@v4
         with:
-          name: ghazi-apk
-          path: |
-            mobile/build/app/outputs/flutter-apk/*.apk
+          name: ghazi-release-apk
+          path: mobile/build/app/outputs/flutter-apk/app-release.apk
