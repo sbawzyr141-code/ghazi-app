@@ -28,6 +28,25 @@ jobs:
         working-directory: ./mobile
         run: flutter pub get
 
+      - name: Install Android SDK command-line tools and platforms
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y wget unzip lib32stdc++6 lib32gcc1
+          mkdir -p $HOME/android-sdk/cmdline-tools
+          cd $HOME/android-sdk
+          if [ ! -f commandlinetools.zip ]; then
+            wget https://dl.google.com/android/repository/commandlinetools-linux-9477386_latest.zip -O commandlinetools.zip
+          fi
+          unzip -q commandlinetools.zip -d cmdline-tools
+          mkdir -p $HOME/android-sdk/cmdline-tools/latest
+          mv cmdline-tools/cmdline-tools/* $HOME/android-sdk/cmdline-tools/latest/ || true
+          export ANDROID_HOME=$HOME/android-sdk
+          export ANDROID_SDK_ROOT=$HOME/android-sdk
+          yes | $HOME/android-sdk/cmdline-tools/latest/bin/sdkmanager --sdk_root=$HOME/android-sdk --licenses || true
+          $HOME/android-sdk/cmdline-tools/latest/bin/sdkmanager --sdk_root=$HOME/android-sdk "platform-tools" "platforms;android-33" "build-tools;33.0.0"
+        env:
+          JAVA_HOME: /usr/lib/jvm/java-17-openjdk-amd64
+
       - name: Build release APK
         working-directory: ./mobile
         env:
